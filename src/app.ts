@@ -5,6 +5,8 @@ import {
   addUser,
   fetchChannel,
   fetchUsers,
+  removeUser,
+  rotateUsers,
   swapUsers,
   userExists,
 } from "./utils/store";
@@ -50,12 +52,12 @@ app.command("/adduser", async ({ command, ack, client, say, respond }) => {
       await respond(`<${commandUser}> is already in this queue.`);
     } else {
       await addUser(command.channel_id, commandUser);
-      await say(`🚀 <${commandUser}> has been add to the releasers queue.`);
+      await say(`👷🏻 <${commandUser}> has been add to the releasers queue.`);
     }
   }
 });
 
-app.command("/swapusers", async ({ command, ack, client, say, respond }) => {
+app.command("/swapusers", async ({ command, ack, say, respond }) => {
   await ack();
   const commandUser1 = command.text.split(" ")[0];
   const commandUser2 = command.text.split(" ")[1];
@@ -66,7 +68,7 @@ app.command("/swapusers", async ({ command, ack, client, say, respond }) => {
     commandUser2 === undefined ||
     commandUser2 === ""
   ) {
-    await respond("Ensure that you passed an two users to swap.");
+    await respond("Ensure that you passed two users to swap.");
   } else if (users?.includes(commandUser1) === false) {
     await respond(
       "First user passed doesn't exists in the current releasers queue."
@@ -85,6 +87,26 @@ app.command("/swapusers", async ({ command, ack, client, say, respond }) => {
   }
 });
 
+app.command("/removeuser", async ({ command, ack, say, respond }) => {
+  await ack();
+  const commandUser = command.text.split(" ")[0];
+  const users = await fetchUsers(command.channel_id);
+  if (commandUser === undefined || commandUser === "") {
+    await respond("Ensure you passed a user to remove.");
+  } else if (users?.includes(commandUser) === false) {
+    await respond("User doesn't exists in the current releasers queue.");
+  } else {
+    await removeUser(command.channel_id, commandUser);
+    await say(`👋 <${commandUser}> has been removed from the releasers queue.`);
+  }
+});
+
+app.command("/rotate", async ({ command, ack, respond }) => {
+  await ack();
+  await rotateUsers(command.channel_id);
+  await respond(`♻️ Releasers queue rotation done`);
+});
+
 app.command("/show", async ({ command, ack, respond, say }) => {
   await ack();
   const channel = await fetchChannel(command.channel_id);
@@ -93,11 +115,10 @@ app.command("/show", async ({ command, ack, respond, say }) => {
     return;
   }
   const users = channel.users;
-  console.log(channel.users);
-  let message = channel.users
+  let message = users
     .map((user, index) => {
       if (index === 0) {
-        return `1️⃣ <${user}>\n\n`;
+        return `🥇 <${user}>\n\n`;
       } else if (index === 1) {
         return `2️⃣ <${user}>\n\n`;
       } else if (index === 2) {

@@ -88,20 +88,52 @@ export async function swapUsers(
   user1: string,
   user2: string
 ) {
-  const users = await fetchUsers(channelId);
-  const indexUser1 = users.indexOf(user1);
-  const indexUser2 = users.indexOf(user2);
-  users[indexUser1] = user2;
-  users[indexUser2] = user1;
-  await client.connect();
-  const database = client.db("releaser");
-  const channels = database.collection("channels");
-  channels.updateOne(
-    { id: channelId },
-    {
-      $set: {
-        users: users,
+  try {
+    const users = await fetchUsers(channelId);
+    const indexUser1 = users.indexOf(user1);
+    const indexUser2 = users.indexOf(user2);
+    users[indexUser1] = user2;
+    users[indexUser2] = user1;
+    await client.connect();
+    const database = client.db("releaser");
+    const channels = database.collection("channels");
+    await channels.updateOne(
+      { id: channelId },
+      {
+        $set: {
+          users: users,
+        },
+      }
+    );
+  } finally {
+    await client.close();
+  }
+}
+
+export async function removeUser(channelId: string, user: string) {
+  try {
+    await client.connect();
+    const database = client.db("releaser");
+    const channels = database.collection("channels");
+    const filter = { id: channelId };
+    const updatedChannel = {
+      $pull: {
+        users: user,
       },
-    }
-  );
+    };
+    const result = await channels.updateOne(filter, updatedChannel);
+    return result;
+  } finally {
+    await client.close();
+  }
+}
+
+export async function rotateUsers(channelId: string) {
+  try {
+    const user = (await fetchUsers(channelId))[0];
+    await removeUser(channelId, user);
+    await addUser(channelId, user);
+  } finally {
+    await client.close();
+  }
 }
