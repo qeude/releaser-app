@@ -3,7 +3,7 @@ import { MongoClient } from "mongodb";
 import { Channel } from "../types/channel";
 import "./env";
 
-const uri = `mongodb://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@${process.env.MONGODB_HOST}:27017/?authMechanism=DEFAULT`;
+const uri = `mongodb://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@${process.env.MONGODB_HOST}:${process.env.MONGODB_PORT}/?authMechanism=DEFAULT`;
 
 const client = new MongoClient(uri);
 
