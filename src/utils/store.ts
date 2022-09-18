@@ -1,3 +1,4 @@
+import { channel } from "diagnostics_channel";
 import { MongoClient } from "mongodb";
 import { Channel } from "../types/channel";
 import "./env";
@@ -80,4 +81,27 @@ export async function removeChannel(id: string) {
   } finally {
     await client.close();
   }
+}
+
+export async function swapUsers(
+  channelId: string,
+  user1: string,
+  user2: string
+) {
+  const users = await fetchUsers(channelId);
+  const indexUser1 = users.indexOf(user1);
+  const indexUser2 = users.indexOf(user2);
+  users[indexUser1] = user2;
+  users[indexUser2] = user1;
+  await client.connect();
+  const database = client.db("releaser");
+  const channels = database.collection("channels");
+  channels.updateOne(
+    { id: channelId },
+    {
+      $set: {
+        users: users,
+      },
+    }
+  );
 }
