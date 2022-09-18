@@ -14,7 +14,7 @@ const app = new App({
 app.command("/createqueue", async ({ command, ack, say, respond, client }) => {
   await ack();
   const storedChannel = await fetchChannel(command.channel_id);
-  if (storedChannel != null) {
+  if (storedChannel !== null) {
     await respond("A releasers queue already exists in this channel.");
   } else {
     await client.conversations.join({
@@ -46,6 +46,50 @@ app.command("/adduser", async ({ command, ack, client, say, respond }) => {
       await say(`🚀 <${commandUser}> has been add to the releasers queue.`);
     }
   }
+});
+
+app.command("/show", async ({ command, ack, respond, say }) => {
+  await ack();
+  const channel = await fetchChannel(command.channel_id);
+  if (channel === null) {
+    await respond("There is no existing queue in this Slack channel.");
+    return;
+  }
+  const users = channel.users;
+  console.log(channel.users);
+  let message = channel.users
+    .map((user, index) => {
+      if (index === 0) {
+        return `1️⃣ <${user}>\n\n`;
+      } else if (index === 1) {
+        return `2️⃣ <${user}>\n\n`;
+      } else if (index === 2) {
+        return `3️⃣ <${user}>\n\n\n\n\n`;
+      } else if (index === users.length - 1) {
+        return `<${user}>.`;
+      } else {
+        return `<${user}>, `;
+      }
+    })
+    .join("");
+  await say({
+    blocks: [
+      {
+        type: "header",
+        text: {
+          type: "plain_text",
+          text: "🚀 Releasers queue",
+        },
+      },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: message.length > 0 ? message : "No one in the queue",
+        },
+      },
+    ],
+  });
 });
 
 (async () => {
