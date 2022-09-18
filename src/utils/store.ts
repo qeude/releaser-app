@@ -1,4 +1,3 @@
-import { channel } from "diagnostics_channel";
 import { MongoClient } from "mongodb";
 import { Channel } from "../types/channel";
 import "./env";
